@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+    <title>Club Manager - Class 03</title>
+</head>
+<body>
+    <header>
+        <h1>Campus Club Manager</h1>
+        <p>Track club members and capacity</p>
+    </header>
+<main>
+    <form id="club-form" class="form">
+        <div class="form-row">
+            <label for="club-name">Club Name</label>
+            <input type="text" id="club-name" placeholder="e.g Science Club">
+        </div>
+        <div class="form-row">
+            <label for="club-capacity"> Max Capacity</label>
+            <input type="number" id="club-capacity" placeholder="e.g 25">
+        </div>
+        <button type="submit" class="btn">Add Club</button>
+        <p id="error-message" class="error" role="alert"></p>
+    </form>
+    <section id="club-info" class="cards"></section>
+</main>
+    <footer>
+        <small>&copy; <span id="year"></span> Campus Club Manager</small>
+    </footer>
+</body>
+</html>
