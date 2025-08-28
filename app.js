@@ -82,18 +82,10 @@ class Club {
 }
 
 let clubs = [
-    Club.fromPlain({name: "War Gaming", current: 15, capacity: 20}),
-    Club.fromPlain({name: "Video Game Club", current: 30, capacity: 30}),
+    Club.fromPlain({name: "War Gaming", current: 3, capacity: 10}),
+    Club.fromPlain({name: "Video Game Club", current: 4, capacity: 5}),
 ];
 
-// function seatsLeft(club) {
-//     return club.capacity - club.current;
-// }
-
-// function percentFull(club) {
-//     if (club.capacity <= 0) return 0;
-//     return Math.round((club.current / club.capacity) * 100);
-// }
 
 function renderClubs() {
     const container = document.getElementById("club-info");
@@ -110,16 +102,82 @@ if (clubs.length === 0) {
 clubs.forEach((club) => {
     const card = document.createElement("div");
     card.className = "club-card";
+    card.dataset.clubId = club.id;
+    
+    const stats = `${club.current}/${club.capacity} seats filled (${club.seatsLeft} left, ${club.percentFull}% full)`;
 
-    // const msg = `${club.name}: ${club.current}/${club.capacity} seats filled (${seatsLeft(club)} left, ${percentFull(club)}% full)`;
-    // card.textContent = msg;
+    const membersHtml = club.members.map(m =>`
+        <li>${m.name}
+            <button class="link-btn" data-action="remove-member" data-club-id="${club.id}" data-member-id="${m.id}">
+                Remove
+            </button>
+        </li>
+    `).join(" ");
 
-    const line1 = `${club.name}`
-    const line2 = `${club.current}/${club.capacity} seats filled (${club.seatsLeft} left, ${club.percentFull}% full)`;
-    card.innerHTML = `<strong>${line1}</strong><br>${line2}`;
+        card.innerHTML = `
+        <div><strong>${club.name}</strong></div>
+        
+        <div class="member-section">
+            <h4> Members (${club.current})</h4>
+            <ul class="member-list">
+                    ${membersHtml || "<li><em>No members yet</em></li>"} 
+            </ul>
+        
+            <div class="inline-form">
+                <input id="member-name-${club.id}" type="text" placeholder="e.g. Tracie" />
+                <button class="btn" data-action="add-member" data-club-id="${club.id}">Add Member</button>
+                <span id="status-${club.id}" class="note"></span>
+            </div>
+        </div>
+        `;
+
     container.appendChild(card);
+
     });
 }
+
+function setStatus(clubId, message){
+    const el = document.getElementById(`status-${clubId}`);
+    if (el) el.textContent = message;
+}
+
+const clubContainer =document.getElementById("club-info");
+
+clubContainer.addEventListener("click", (e)=> {
+const btn = e.target.closest("[data-action]")
+if (!btn) return;
+
+const action = btn.dataset.action;
+const clubId = btn.dataset.clubId
+const club = clubs.find(c => c.id === clubId);
+if (!club) return;
+
+if (action === "add-member") {
+    const input = document.getElementById(`member-name-${clubId}`);
+    const name = (input?.value || "").trim();
+
+    if (name === "") { setStatus(clubId, "Please enter a member name."); return;}
+
+    const result = club.addMember(name);
+    if (!result.valid) { 
+        const msg = result.reason === "full" ? "Club is at Capacity." 
+            : result.reason === "duplicate" ? "Member name already exists."
+            : "Invalid member name.";
+        setStatus(clubId, msg);
+        return;
+        }
+    
+    setStatus(clubId, "Member added.");
+    renderClubs();
+    }
+
+    if (action === "remove-member") {
+        const memberId = btn.dataset.memberId;
+        club.removeMember(memberId)
+        renderClubs();
+    }
+
+});
 
 function addClub(name, capacity) {
     clubs.push(new Club(name, capacity));
@@ -140,18 +198,18 @@ document.getElementById("club-form").addEventListener("submit", function (e) {
     errorMessage.textContent = "Please enter a valid club name and capacity (min 1).";
 return;
 }
-
 const exists = clubs.some(c => c.name.toLowerCase() === name.toLowerCase());
 if (exists) {
     errorMessage.textContent = "A club with this name already exists.";
     return;
-} else {
-    errorMessage.textContent = " ";
-    addClub(name, capacity);
+}
+    errorMessage.textContent = "";
+    clubs.push(new Club(name, capacity));
+    renderClubs();
+
     nameInput.value = "";
     capacityInput.value = "";
     nameInput.focus();
-    }
 });
 
 document.getElementById("year").textContent = new Date().getFullYear();
