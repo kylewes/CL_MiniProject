@@ -55,13 +55,13 @@ class Club {
         this.members.push(m);
         return {valid: true, member: m};
     }
-
-    removeMember(memeberId) {
-        const i = this.members.findIndex(m => m.id === memeberId);
+    // Remove Members
+    removeMember(memberId) {
+        const i = this.members.findIndex(m => m.id === memberId);
         if (i >= 0) { this.members.splice(i, 1); return true;}
         return false;
     }
-
+    // Add Events
     addEvent(evt) {
         if (evt instanceof EventItem) this.events.push(evt);
     }
@@ -84,22 +84,53 @@ class Club {
 let clubs = [
     Club.fromPlain({name: "War Gaming", current: 3, capacity: 10}),
     Club.fromPlain({name: "Video Game Club", current: 4, capacity: 5}),
+    Club.fromPlain({name: "Art Club", current: 8, capacity: 10}),
+    Club.fromPlain({name: "Baseketball", current: 10, capacity: 15})
 ];
 
+const ui = {
+    searchText: "",
+    onlyOpen: false,
+    sortBy: "name-asc",
+};
+
+function getVisibleClubs() {
+    let list = clubs.slice();
+
+    const q = ui.searchText.trim().toLowerCase();
+    if (q) {
+        list = list.filter(c => c.name.toLowerCase().includes(q));
+    }
+
+    if (ui.onlyOpen) {
+        list = list.filter(c => c.seatsLeft > 0);
+    }
+    
+    list.sort((a,b) => {
+        switch (ui.sortBy) {
+            case "name-asc": return a.name.localeCompare(b.name);
+            case "name-desc": return b.name.localeCompare(a.name);
+            case "seats-desc": return b.seatsLeft - a.seatsLeft;
+            case "capacity-desc": return b.capacity - a.capacity;
+            default: return 0;
+        }
+    });
+    return list;
+}
 
 function renderClubs() {
     const container = document.getElementById("club-info");
     container.innerHTML = "";
 
-
-if (clubs.length === 0) {
-    const p = document.createElement("p");
-    p.textContent = "No clubs yet. Add one above to get started.";
-    container.appendChild(p);
-    return;
+    const visible = getVisibleClubs();
+    if (visible.length === 0) {
+        const p = document.createElement("p");
+        p.textContent = "No clubs match your filters.";
+        container.appendChild(p);
+        return;
     }
 
-clubs.forEach((club) => {
+    visible.forEach((club) => {
     const card = document.createElement("div");
     card.className = "club-card";
     card.dataset.clubId = club.id;
@@ -211,6 +242,21 @@ if (exists) {
     capacityInput.value = "";
     nameInput.focus();
 });
+
+document.getElementById("search").addEventListener("input", (e) => {
+    ui.searchText = e.target.value;
+    renderClubs();
+});
+
+document.getElementById("only-open").addEventListener("change", (e) =>{
+    ui.onlyOpen = e.target.checked;
+    renderClubs();
+});
+
+document.getElementById("sort-by").addEventListener("change", (e) => {
+    ui.sortBy = e.target.value;
+    renderClubs();
+})
 
 document.getElementById("year").textContent = new Date().getFullYear();
 

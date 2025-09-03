@@ -10,7 +10,7 @@
 <body>
     <header>
         <h1>Campus Club Manager</h1>
-        <p>Track club members and capacity</p>
+        <p>Search, filter, and sort clubs</p>
     </header>
 <main>
     <form id="club-form" class="form">
@@ -25,6 +25,20 @@
         <button type="submit" class="btn">Add Club</button>
         <p id="error-message" class="error" role="alert"></p>
     </form>
+    <section class="toolbar"> 
+        <input id="search" class="input" type="search" placeholder="Search clubs..." aria-label="Search clubs by name."/>
+        <label class="checkbox">
+            <input id="only-open" type="checkbox" />
+            Has seats only
+        </label>
+        <label for="sort-by">Sort by:</label>
+        <select id="sort-by" class="select" aria-label="Sort clubs">
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="seats-desc">Seats Left (High-Low)</option>
+            <option value="capacity-desc">Capacity (High-Low)</option>
+        </select>
+    </section>
     <section id="club-info" class="cards"></section>
 </main>
     <footer>
