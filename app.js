@@ -2,6 +2,18 @@
 let __id = 1;
 function makeId(prefix) { return `${prefix}_${__id++}`;}
 
+function debounce(fn, delay = 250) {
+    let timer = null;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+    };
+}
+
+function pipe(...fns) {
+    return (input) => fns.reduce((val, fn) => fn(val), input);
+}
+
 // Models
 // Builds Members
 class Member {
@@ -94,35 +106,42 @@ const ui = {
     sortBy: "name-asc",
 };
 
-function getVisibleClubs() {
-    let list = clubs.slice();
-
+const applySearch = (list) => {
     const q = ui.searchText.trim().toLowerCase();
-    if (q) {
-        list = list.filter(c => c.name.toLowerCase().includes(q));
-    }
-
-    if (ui.onlyOpen) {
-        list = list.filter(c => c.seatsLeft > 0);
-    }
-    
-    list.sort((a,b) => {
-        switch (ui.sortBy) {
-            case "name-asc": return a.name.localeCompare(b.name);
-            case "name-desc": return b.name.localeCompare(a.name);
-            case "seats-desc": return b.seatsLeft - a.seatsLeft;
-            case "capacity-desc": return b.capacity - a.capacity;
-            default: return 0;
-        }
-    });
-    return list;
+    if (!q) return list;
+    return list.filter(c => c.name.toLowerCase().includes(q));
 }
 
-function renderClubs() {
-    const container = document.getElementById("club-info");
-    container.innerHTML = "";
+const applyOnlyOpen = (list) =>  {
+    if (!ui.onlyOpen) return list;
+    return list.filter(c => c.seatsLeft > 0);
+}
 
-    const visible = getVisibleClubs();
+const applySort = (list) => {
+    const copy = list.slice();
+    copy.sort((a,b) => {
+        switch (ui.sortBy) {
+        case "name-asc": return a.name.localeCompare(b.name);
+        case "name-desc": return b.name.localeCompare(a.name);
+        case "seats-desc": return b.seatsLeft - a.seatsLeft;
+        case "capacity-desc": return b.capacity - a.capacity;
+        default: return 0;
+        }
+    });
+    return copy;
+}
+const getVisibleClubs = pipe(
+    (arr) => arr.slice(),
+    applySearch,
+    applyOnlyOpen,
+    applySort
+    );
+    
+    function renderClubs() {
+        const container = document.getElementById("club-info");
+        container.innerHTML = "";
+
+    const visible = getVisibleClubs(clubs);
     if (visible.length === 0) {
         const p = document.createElement("p");
         p.textContent = "No clubs match your filters.";
@@ -243,10 +262,14 @@ if (exists) {
     nameInput.focus();
 });
 
-document.getElementById("search").addEventListener("input", (e) => {
-    ui.searchText = e.target.value;
+const onSearchInput = debounce((value) => {
+    ui.searchText = value;
     renderClubs();
-});
+}, 300);
+
+document.getElementById("search").addEventListener("input", (e) => {
+    onSearchInput(e.target.value);
+})
 
 document.getElementById("only-open").addEventListener("change", (e) =>{
     ui.onlyOpen = e.target.checked;
